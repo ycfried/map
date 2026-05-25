@@ -192,12 +192,11 @@ export default function DashboardPage() {
                       <div className="flex gap-4 items-center flex-wrap">
                         <div className="flex-1 min-w-[200px]">
                           <label className="text-xs font-medium mb-1 block">Filter by Group</label>
-                          <Select value={filterGroup} onValueChange={setFilterGroup}>
+                          <Select value={filterGroup || undefined} onValueChange={(val) => setFilterGroup(val || '')}>
                             <SelectTrigger className="h-9">
                               <SelectValue placeholder="All groups" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">All groups</SelectItem>
                               {groups.map(group => (
                                 <SelectItem key={group} value={group}>
                                   <div className="flex items-center gap-2">
@@ -206,8 +205,23 @@ export default function DashboardPage() {
                                   </div>
                                 </SelectItem>
                               ))}
+                              {groups.length === 0 && (
+                                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                                  No groups to filter
+                                </div>
+                              )}
                             </SelectContent>
                           </Select>
+                          {filterGroup && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFilterGroup('')}
+                              className="mt-1 h-6 text-xs"
+                            >
+                              Clear filter
+                            </Button>
+                          )}
                         </div>
                         
                         <div className="flex-1 min-w-[200px]">

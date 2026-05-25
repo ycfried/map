@@ -175,17 +175,21 @@ export function SubmissionForm({ onSuccess, groups = [] }) {
                 <Tag className="h-3 w-3 inline mr-1" />
                 Group (optional)
               </Label>
-              <Select value={group} onValueChange={setGroup}>
+              <Select value={group || undefined} onValueChange={(val) => setGroup(val || '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="No group" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No group</SelectItem>
                   {groups.map((g) => (
                     <SelectItem key={g} value={g}>
                       {g}
                     </SelectItem>
                   ))}
+                  {groups.length === 0 && (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      No groups yet
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
