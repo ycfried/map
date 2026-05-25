@@ -12,6 +12,7 @@ import { CheckCircle2, Loader2 } from 'lucide-react'
 
 export function SubmissionForm({ onSuccess }) {
   const [selectedAddress, setSelectedAddress] = useState(null)
+  const [addressValue, setAddressValue] = useState('')
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -23,13 +24,20 @@ export function SubmissionForm({ onSuccess }) {
     setError('')
   }
 
+  const resetForm = () => {
+    setTitle('')
+    setNotes('')
+    setAddressValue('')
+    setSelectedAddress(null)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
 
     if (!selectedAddress) {
-      setError('Please select an address')
+      setError('Please select an address from the suggestions')
       return
     }
 
@@ -60,9 +68,7 @@ export function SubmissionForm({ onSuccess }) {
       }
 
       setSuccess(true)
-      setTitle('')
-      setNotes('')
-      setSelectedAddress(null)
+      resetForm()
 
       if (onSuccess) {
         onSuccess()
@@ -90,7 +96,7 @@ export function SubmissionForm({ onSuccess }) {
           )}
 
           {success && (
-            <Alert className="border-green-500 text-green-700">
+            <Alert className="border-green-500 text-green-700 bg-green-50">
               <CheckCircle2 className="h-4 w-4" />
               <AlertDescription>Entry created successfully!</AlertDescription>
             </Alert>
@@ -113,10 +119,12 @@ export function SubmissionForm({ onSuccess }) {
             <AddressAutocomplete
               onAddressSelect={handleAddressSelect}
               disabled={isSubmitting}
+              value={addressValue}
+              onChange={setAddressValue}
             />
             {selectedAddress && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Selected: {selectedAddress.description}
+              <p className="text-xs text-green-600 mt-1">
+                ✓ Selected: {selectedAddress.description}
               </p>
             )}
           </div>

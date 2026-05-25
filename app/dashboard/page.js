@@ -6,11 +6,12 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { SubmissionForm } from '@/components/submission-form'
 import { MapComponent } from '@/components/map-component'
 import { SubmissionsList } from '@/components/submissions-list'
+import { RouteBuilder } from '@/components/route-builder'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LogOut, Map, List, PlusCircle } from 'lucide-react'
+import { LogOut, Map, List, Navigation } from 'lucide-react'
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null)
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('form')
+  const [routeOrder, setRouteOrder] = useState([])
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
 
@@ -141,7 +143,7 @@ export default function DashboardPage() {
           {/* Right Column - Map & List */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="map">
                   <Map className="h-4 w-4 mr-2" />
                   Map View
@@ -150,12 +152,20 @@ export default function DashboardPage() {
                   <List className="h-4 w-4 mr-2" />
                   List View
                 </TabsTrigger>
+                <TabsTrigger value="route">
+                  <Navigation className="h-4 w-4 mr-2" />
+                  Route Planner
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="map" className="mt-4">
                 <Card>
                   <CardContent className="p-0">
-                    <MapComponent submissions={submissions} />
+                    <MapComponent 
+                      submissions={submissions}
+                      routeOrder={null}
+                      showRoute={false}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -166,6 +176,37 @@ export default function DashboardPage() {
                   onDelete={loadSubmissions}
                   isAdmin={isAdmin}
                 />
+              </TabsContent>
+
+              <TabsContent value="route" className="mt-4">
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <RouteBuilder
+                        submissions={submissions}
+                        onRouteChange={setRouteOrder}
+                      />
+                    </CardContent>
+                  </Card>
+                  
+                  {routeOrder.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Route Preview</CardTitle>
+                        <CardDescription>
+                          {routeOrder.length} stops in this route
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <MapComponent 
+                          submissions={submissions}
+                          routeOrder={routeOrder}
+                          showRoute={true}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           </div>

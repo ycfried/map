@@ -4,13 +4,20 @@ import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { MapPin } from 'lucide-react'
 
-export function AddressAutocomplete({ onAddressSelect, disabled }) {
-  const [query, setQuery] = useState('')
+export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange }) {
+  const [query, setQuery] = useState(value || '')
   const [suggestions, setSuggestions] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const debounceTimeoutRef = useRef(null)
   const wrapperRef = useRef(null)
+
+  // Update query when external value changes
+  useEffect(() => {
+    if (value !== undefined) {
+      setQuery(value)
+    }
+  }, [value])
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -58,10 +65,21 @@ export function AddressAutocomplete({ onAddressSelect, disabled }) {
     }
   }, [query])
 
+  const handleInputChange = (e) => {
+    const newValue = e.target.value
+    setQuery(newValue)
+    if (onChange) {
+      onChange(newValue)
+    }
+  }
+
   const handleSelectSuggestion = (suggestion) => {
     setQuery(suggestion.description)
     setSuggestions([])
     setShowSuggestions(false)
+    if (onChange) {
+      onChange(suggestion.description)
+    }
     onAddressSelect(suggestion)
   }
 
@@ -72,7 +90,7 @@ export function AddressAutocomplete({ onAddressSelect, disabled }) {
         <Input
           placeholder="Start typing an address..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleInputChange}
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
           disabled={disabled}
           className="pl-10"
@@ -91,7 +109,10 @@ export function AddressAutocomplete({ onAddressSelect, disabled }) {
               key={s.placeId}
               type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-b-0"
-              onClick={() => handleSelectSuggestion(s)}
+              onMouseDown={(e) => {
+                e.preventDefault() // Prevent input blur
+                handleSelectSuggestion(s)
+              }}
             >
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
