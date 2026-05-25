@@ -9,12 +9,13 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
   const [suggestions, setSuggestions] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [justSelected, setJustSelected] = useState(false)
   const debounceTimeoutRef = useRef(null)
   const wrapperRef = useRef(null)
 
   // Update query when external value changes
   useEffect(() => {
-    if (value !== undefined) {
+    if (value !== undefined && !justSelected) {
       setQuery(value)
     }
   }, [value])
@@ -32,6 +33,11 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
 
   // Fetch autocomplete suggestions
   useEffect(() => {
+    // Don't fetch if we just selected an address
+    if (justSelected) {
+      return
+    }
+
     if (!query || query.trim().length < 3) {
       setSuggestions([])
       setShowSuggestions(false)
@@ -49,7 +55,7 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
         if (!res.ok) throw new Error('Failed to fetch suggestions')
         const data = await res.json()
         setSuggestions(data.suggestions || [])
-        setShowSuggestions(true)
+        setShowSuggestions(data.suggestions && data.suggestions.length > 0)
       } catch (e) {
         console.error(e)
         setSuggestions([])
@@ -63,11 +69,12 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
         clearTimeout(debounceTimeoutRef.current)
       }
     }
-  }, [query])
+  }, [query, justSelected])
 
   const handleInputChange = (e) => {
     const newValue = e.target.value
     setQuery(newValue)
+    setJustSelected(false) // Reset flag when user types
     if (onChange) {
       onChange(newValue)
     }
@@ -77,10 +84,17 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
     setQuery(suggestion.description)
     setSuggestions([])
     setShowSuggestions(false)
+    setJustSelected(true) // Set flag to prevent immediate re-fetch
+    
     if (onChange) {
       onChange(suggestion.description)
     }
     onAddressSelect(suggestion)
+    
+    // Reset flag after a delay
+    setTimeout(() => {
+      setJustSelected(false)
+    }, 1000)
   }
 
   return (
@@ -91,7 +105,7 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
           placeholder="Start typing an address..."
           value={query}
           onChange={handleInputChange}
-          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          onFocus={() => !justSelected && suggestions.length > 0 && setShowSuggestions(true)}
           disabled={disabled}
           className="pl-10"
           autoComplete="off"
@@ -102,7 +116,7 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
         <p className="text-xs text-muted-foreground mt-1">Loading suggestions...</p>
       )}
 
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && suggestions.length > 0 && !justSelected && (
         <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
           {suggestions.map((s) => (
             <button
@@ -110,7 +124,7 @@ export function AddressAutocomplete({ onAddressSelect, disabled, value, onChange
               type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-b-0"
               onMouseDown={(e) => {
-                e.preventDefault() // Prevent input blur
+                e.preventDefault()
                 handleSelectSuggestion(s)
               }}
             >

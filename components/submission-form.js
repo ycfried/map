@@ -8,13 +8,27 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle2, Loader2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CheckCircle2, Loader2, Tag } from 'lucide-react'
 
-export function SubmissionForm({ onSuccess }) {
+const MARKER_COLORS = [
+  { value: 'green', label: 'Green', color: '#10b981' },
+  { value: 'blue', label: 'Blue', color: '#3b82f6' },
+  { value: 'red', label: 'Red', color: '#ef4444' },
+  { value: 'yellow', label: 'Yellow', color: '#eab308' },
+  { value: 'purple', label: 'Purple', color: '#a855f7' },
+  { value: 'orange', label: 'Orange', color: '#f97316' },
+  { value: 'pink', label: 'Pink', color: '#ec4899' },
+  { value: 'gray', label: 'Gray', color: '#6b7280' },
+]
+
+export function SubmissionForm({ onSuccess, groups = [] }) {
   const [selectedAddress, setSelectedAddress] = useState(null)
   const [addressValue, setAddressValue] = useState('')
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
+  const [markerColor, setMarkerColor] = useState('green')
+  const [group, setGroup] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -29,6 +43,8 @@ export function SubmissionForm({ onSuccess }) {
     setNotes('')
     setAddressValue('')
     setSelectedAddress(null)
+    setMarkerColor('green')
+    setGroup('')
   }
 
   const handleSubmit = async (e) => {
@@ -58,6 +74,8 @@ export function SubmissionForm({ onSuccess }) {
           formData: {
             title,
             notes,
+            markerColor,
+            group: group || null,
           },
         }),
       })
@@ -127,6 +145,50 @@ export function SubmissionForm({ onSuccess }) {
                 ✓ Selected: {selectedAddress.description}
               </p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="markerColor">Marker Color</Label>
+              <Select value={markerColor} onValueChange={setMarkerColor}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MARKER_COLORS.map((color) => (
+                    <SelectItem key={color.value} value={color.value}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: color.color }}
+                        />
+                        {color.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="group">
+                <Tag className="h-3 w-3 inline mr-1" />
+                Group (optional)
+              </Label>
+              <Select value={group} onValueChange={setGroup}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No group</SelectItem>
+                  {groups.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">

@@ -7,11 +7,13 @@ import { SubmissionForm } from '@/components/submission-form'
 import { MapComponent } from '@/components/map-component'
 import { SubmissionsList } from '@/components/submissions-list'
 import { RouteBuilder } from '@/components/route-builder'
+import { GroupManager } from '@/components/group-manager'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LogOut, Map, List, Navigation } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { LogOut, Map, List, Navigation, Tag, Globe } from 'lucide-react'
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null)
@@ -20,6 +22,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('form')
   const [routeOrder, setRouteOrder] = useState([])
+  const [filterGroup, setFilterGroup] = useState('')
+  const [mapStyle, setMapStyle] = useState('light')
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
 
@@ -77,6 +81,20 @@ export default function DashboardPage() {
     setActiveTab('list')
   }
 
+  // Get unique groups from submissions
+  const groups = [...new Set(submissions.map(s => s.formData?.group).filter(Boolean))]
+
+  // Filter submissions for form
+  const filteredSubmissions = filterGroup 
+    ? submissions.filter(s => s.formData?.group === filterGroup)
+    : submissions
+
+  const handleAddGroup = (groupName) => {
+    // Group will be automatically available when a submission uses it
+    // Just refresh to show it in the list
+    console.log('New group created:', groupName)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -132,11 +150,19 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground mt-1">
                     Total {submissions.length === 1 ? 'entry' : 'entries'}
                   </p>
+                  {groups.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {groups.length} {groups.length === 1 ? 'group' : 'groups'}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
+              {/* Group Manager */}
+              <GroupManager groups={groups} onAddGroup={handleAddGroup} />
+
               {/* Form */}
-              <SubmissionForm onSuccess={handleSubmissionSuccess} />
+              <SubmissionForm onSuccess={handleSubmissionSuccess} groups={groups} />
             </div>
           </div>
 
@@ -159,15 +185,88 @@ export default function DashboardPage() {
               </TabsList>
 
               <TabsContent value="map" className="mt-4">
-                <Card>
-                  <CardContent className="p-0">
-                    <MapComponent 
-                      submissions={submissions}
-                      routeOrder={null}
-                      showRoute={false}
-                    />
-                  </CardContent>
-                </Card>
+                <div className="space-y-4">
+                  {/* Map Controls */}
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex gap-4 items-center flex-wrap">
+                        <div className="flex-1 min-w-[200px]">
+                          <label className="text-xs font-medium mb-1 block">Filter by Group</label>
+                          <Select value={filterGroup} onValueChange={setFilterGroup}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="All groups" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">All groups</SelectItem>
+                              {groups.map(group => (
+                                <SelectItem key={group} value={group}>
+                                  <div className="flex items-center gap-2">
+                                    <Tag className="h-3 w-3" />
+                                    {group}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex-1 min-w-[200px]">
+                          <label className="text-xs font-medium mb-1 block">Map Style</label>
+                          <Select value={mapStyle} onValueChange={setMapStyle}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="light">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  Light
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="dark">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  Dark
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="satellite">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  Satellite
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="streets">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  Streets
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {filterGroup && (
+                          <Badge variant="secondary" className="h-9 px-4">
+                            {filteredSubmissions.length} of {submissions.length} locations
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Map */}
+                  <Card>
+                    <CardContent className="p-0">
+                      <MapComponent 
+                        submissions={submissions}
+                        routeOrder={null}
+                        showRoute={false}
+                        filterGroup={filterGroup}
+                        mapStyle={mapStyle}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="list" className="mt-4">
@@ -202,6 +301,7 @@ export default function DashboardPage() {
                           submissions={submissions}
                           routeOrder={routeOrder}
                           showRoute={true}
+                          mapStyle={mapStyle}
                         />
                       </CardContent>
                     </Card>
