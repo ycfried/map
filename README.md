@@ -60,12 +60,15 @@ WHERE id = (
 1. Go to https://console.cloud.google.com
 2. Create a new project or select existing
 3. Enable these APIs:
-   - Places API
-   - Geocoding API
+   - **Places API (New)** - Required for address autocomplete
+   - **Geocoding API** - Required for coordinate resolution
 4. Go to **Credentials** → **Create Credentials** → **API Key**
 5. **Restrict the API key:**
-   - API restrictions: Select "Places API" and "Geocoding API"
-   - (Optional) Application restrictions: Set HTTP referrer or IP restrictions
+   - API restrictions: Select "Places API (New)" and "Geocoding API"
+   - Application restrictions: Leave as "None" for server-side usage
+   - (Optional) You can add HTTP referrer restrictions for additional security
+
+**Note:** The app uses the newer Places API (New) via direct HTTP requests for better compatibility.
 
 ### 4. Environment Variables
 
