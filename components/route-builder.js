@@ -17,7 +17,7 @@ const OPTIMIZATION_METHODS = [
 ]
 
 export function RouteBuilder({ submissions, onRouteChange }) {
-  const [routeOrder, setRouteOrder] = useState(submissions.map(s => s._id))
+  const [routeOrder, setRouteOrder] = useState(submissions.map(s => s.id))
   const [optimizationMethod, setOptimizationMethod] = useState('geographic')
 
   const moveUp = (index) => {
@@ -84,24 +84,24 @@ export function RouteBuilder({ submissions, onRouteChange }) {
 
       case 'alphabetical':
         orderedSubmissions.sort((a, b) => {
-          const titleA = (a.formData?.title || '').toLowerCase()
-          const titleB = (b.formData?.title || '').toLowerCase()
+          const titleA = (a.form_data?.title || '').toLowerCase()
+          const titleB = (b.form_data?.title || '').toLowerCase()
           return titleA.localeCompare(titleB)
         })
         break
 
       case 'date':
         orderedSubmissions.sort((a, b) => 
-          new Date(a.createdAt) - new Date(b.createdAt)
+          new Date(a.created_at) - new Date(b.created_at)
         )
         break
 
       case 'group':
         orderedSubmissions.sort((a, b) => {
-          const groupA = a.formData?.group || ''
-          const groupB = b.formData?.group || ''
+          const groupA = a.form_data?.group || ''
+          const groupB = b.form_data?.group || ''
           if (groupA === groupB) {
-            return (a.formData?.title || '').localeCompare(b.formData?.title || '')
+            return (a.form_data?.title || '').localeCompare(b.form_data?.title || '')
           }
           return groupA.localeCompare(groupB)
         })
@@ -116,16 +116,16 @@ export function RouteBuilder({ submissions, onRouteChange }) {
         break
     }
 
-    const newOrder = orderedSubmissions.map(s => s._id)
+    const newOrder = orderedSubmissions.map(s => s.id)
     setRouteOrder(newOrder)
     onRouteChange(newOrder)
   }
 
-  const getSubmission = (id) => submissions.find(s => s._id === id)
+  const getSubmission = (id) => submissions.find(s => s.id === id)
   const inRoute = (id) => routeOrder.includes(id)
 
   // Get unique groups
-  const groups = [...new Set(submissions.map(s => s.formData?.group).filter(Boolean))]
+  const groups = [...new Set(submissions.map(s => s.form_data?.group).filter(Boolean))]
 
   // Calculate total distance (approximate)
   const calculateDistance = () => {
@@ -220,7 +220,7 @@ export function RouteBuilder({ submissions, onRouteChange }) {
           const submission = getSubmission(id)
           if (!submission) return null
 
-          const markerColor = submission.formData?.markerColor || 'green'
+          const markerColor = submission.form_data?.markerColor || 'green'
           const colorMap = {
             green: 'bg-green-500',
             blue: 'bg-blue-500',
@@ -246,16 +246,16 @@ export function RouteBuilder({ submissions, onRouteChange }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-medium text-sm truncate">
-                        {submission.formData?.title || 'Untitled'}
+                        {submission.form_data?.title || 'Untitled'}
                       </p>
-                      {submission.formData?.group && (
+                      {submission.form_data?.group && (
                         <Badge variant="secondary" className="text-xs">
-                          {submission.formData.group}
+                          {submission.form_data.group}
                         </Badge>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      {submission.formattedAddress}
+                      {submission.formatted_address}
                     </p>
                   </div>
 
@@ -299,9 +299,9 @@ export function RouteBuilder({ submissions, onRouteChange }) {
           <h4 className="text-sm font-medium mb-2 text-muted-foreground">Not in Route</h4>
           <div className="space-y-2">
             {submissions
-              .filter(s => !inRoute(s._id))
+              .filter(s => !inRoute(s.id))
               .map(submission => {
-                const markerColor = submission.formData?.markerColor || 'green'
+                const markerColor = submission.form_data?.markerColor || 'green'
                 const colorMap = {
                   green: 'bg-green-500',
                   blue: 'bg-blue-500',
@@ -314,29 +314,29 @@ export function RouteBuilder({ submissions, onRouteChange }) {
                 }
 
                 return (
-                  <Card key={submission._id} className="overflow-hidden">
+                  <Card key={submission.id} className="overflow-hidden">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-3">
                         <div className={`h-3 w-3 rounded-full ${colorMap[markerColor]}`} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-medium text-sm truncate">
-                              {submission.formData?.title || 'Untitled'}
+                              {submission.form_data?.title || 'Untitled'}
                             </p>
-                            {submission.formData?.group && (
+                            {submission.form_data?.group && (
                               <Badge variant="secondary" className="text-xs">
-                                {submission.formData.group}
+                                {submission.form_data.group}
                               </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">
-                            {submission.formattedAddress}
+                            {submission.formatted_address}
                           </p>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => addToRoute(submission._id)}
+                          onClick={() => addToRoute(submission.id)}
                         >
                           Add
                         </Button>

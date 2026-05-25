@@ -82,11 +82,11 @@ export default function DashboardPage() {
   }
 
   // Get unique groups from submissions
-  const groups = [...new Set(submissions.map(s => s.formData?.group).filter(Boolean))]
+  const groups = [...new Set(submissions.map(s => s.form_data?.group).filter(Boolean))]
 
   // Filter submissions for form
   const filteredSubmissions = filterGroup 
-    ? submissions.filter(s => s.formData?.group === filterGroup)
+    ? submissions.filter(s => s.form_data?.group === filterGroup)
     : submissions
 
   const handleAddGroup = (groupName) => {

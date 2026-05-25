@@ -30,33 +30,33 @@ export function SubmissionsList({ submissions, onDelete, isAdmin }) {
   return (
     <div className="space-y-3">
       {submissions.map((submission) => (
-        <Card key={submission._id}>
+        <Card key={submission.id}>
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-semibold text-lg">
-                    {submission.formData?.title || 'Untitled Entry'}
+                    {submission.form_data?.title || 'Untitled Entry'}
                   </h3>
-                  {isAdmin && submission.userEmail && (
+                  {isAdmin && submission.user_email && (
                     <Badge variant="outline" className="text-xs">
-                      {submission.userEmail}
+                      {submission.user_email}
                     </Badge>
                   )}
                 </div>
                 <div className="flex items-start gap-2 text-sm text-muted-foreground mb-2">
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>{submission.formattedAddress}</span>
+                  <span>{submission.formatted_address}</span>
                 </div>
-                {submission.formData?.notes && (
+                {submission.form_data?.notes && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    {submission.formData.notes}
+                    {submission.form_data.notes}
                   </p>
                 )}
                 <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {new Date(submission.createdAt).toLocaleDateString()}
+                    {new Date(submission.created_at).toLocaleDateString()}
                   </div>
                   <div>
                     {submission.latitude.toFixed(6)}, {submission.longitude.toFixed(6)}
@@ -66,7 +66,7 @@ export function SubmissionsList({ submissions, onDelete, isAdmin }) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDelete(submission._id)}
+                onClick={() => handleDelete(submission.id)}
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />

@@ -91,7 +91,7 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
       // Filter submissions by group if needed
       let filteredSubmissions = submissions
       if (filterGroup) {
-        filteredSubmissions = submissions.filter(s => s.formData?.group === filterGroup)
+        filteredSubmissions = submissions.filter(s => s.form_data?.group === filterGroup)
       }
 
       if (filteredSubmissions && filteredSubmissions.length > 0) {
@@ -102,7 +102,7 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
 
         orderedSubmissions.forEach((submission, index) => {
           if (submission.latitude && submission.longitude) {
-            const markerColorName = submission.formData?.markerColor || 'green'
+            const markerColorName = submission.form_data?.markerColor || 'green'
             const colors = MARKER_COLORS[markerColorName] || MARKER_COLORS.green
 
             let icon
@@ -193,9 +193,9 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
                       font-size: 17px;
                       margin: 0;
                       color: #1f2937;
-                    ">${submission.formData?.title || 'Entry'}</h3>
+                    ">${submission.form_data?.title || 'Entry'}</h3>
                   </div>
-                  ${submission.formData?.group ? `
+                  ${submission.form_data?.group ? `
                     <div style="
                       display: inline-block;
                       padding: 2px 8px;
@@ -206,7 +206,7 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
                       margin-bottom: 8px;
                       font-weight: 500;
                     ">
-                      🏷️ ${submission.formData.group}
+                      🏷️ ${submission.form_data.group}
                     </div>
                   ` : ''}
                   <p style="
@@ -214,8 +214,8 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
                     color: #6b7280;
                     margin: 0 0 10px 0;
                     line-height: 1.5;
-                  ">${submission.formattedAddress}</p>
-                  ${submission.formData?.notes ? `
+                  ">${submission.formatted_address}</p>
+                  ${submission.form_data?.notes ? `
                     <p style="
                       font-size: 12px;
                       color: #4b5563;
@@ -225,7 +225,7 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
                       border-left: 3px solid ${colors.primary};
                       border-radius: 4px;
                       line-height: 1.5;
-                    ">${submission.formData.notes}</p>
+                    ">${submission.form_data.notes}</p>
                   ` : ''}
                   <div style="
                     font-size: 11px;
@@ -238,7 +238,7 @@ export function MapComponent({ submissions, routeOrder = null, showRoute = false
                     align-items: center;
                   ">
                     <span>
-                      ${new Date(submission.createdAt).toLocaleDateString('en-US', { 
+                      ${new Date(submission.created_at).toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric', 
                         year: 'numeric' 

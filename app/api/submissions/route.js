@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { resolvePlaceToCoordinates } from '@/lib/google-places'
-import clientPromise from '@/lib/mongodb'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function GET(req) {
@@ -21,15 +20,25 @@ export async function GET(req) {
 
   const role = profile?.role ?? 'user'
 
-  const client = await clientPromise
-  const db = client.db(process.env.DB_NAME || 'location_data_app')
-  const submissions = db.collection('submissions')
+  // Build query based on role
+  let query = supabase
+    .from('submissions')
+    .select('*')
+    .order('created_at', { ascending: false })
 
-  const filter = role === 'admin' ? {} : { userId: user.id }
+  // If not admin, filter by user_id
+  if (role !== 'admin') {
+    query = query.eq('user_id', user.id)
+  }
 
-  const docs = await submissions.find(filter).sort({ createdAt: -1 }).toArray()
+  const { data: submissions, error } = await query
 
-  return NextResponse.json({ submissions: docs })
+  if (error) {
+    console.error('Error fetching submissions:', error)
+    return NextResponse.json({ error: 'Failed to fetch submissions' }, { status: 500 })
+  }
+
+  return NextResponse.json({ submissions })
 }
 
 export async function POST(req) {
@@ -55,32 +64,31 @@ export async function POST(req) {
 
     const resolved = await resolvePlaceToCoordinates(placeId)
 
-    const client = await clientPromise
-    const db = client.db(process.env.DB_NAME || 'location_data_app')
-    const submissions = db.collection('submissions')
+    const { data: submission, error } = await supabase
+      .from('submissions')
+      .insert({
+        user_id: user.id,
+        user_email: user.email,
+        description,
+        formatted_address: resolved.formattedAddress,
+        latitude: resolved.latitude,
+        longitude: resolved.longitude,
+        place_id: resolved.placeId,
+        form_data: formData || {},
+      })
+      .select()
+      .single()
 
-    const now = new Date()
-
-    const result = await submissions.insertOne({
-      userId: user.id,
-      userEmail: user.email,
-      description,
-      formattedAddress: resolved.formattedAddress,
-      latitude: resolved.latitude,
-      longitude: resolved.longitude,
-      location: {
-        type: 'Point',
-        coordinates: [resolved.longitude, resolved.latitude],
-      },
-      placeId: resolved.placeId,
-      formData: formData || {},
-      createdAt: now,
-    })
-
-    const insertedDoc = await submissions.findOne({ _id: result.insertedId })
+    if (error) {
+      console.error('Error creating submission:', error)
+      return NextResponse.json(
+        { error: 'Failed to create submission' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(
-      { submission: insertedDoc, message: 'Submission created' },
+      { submission, message: 'Submission created' },
       { status: 201 }
     )
   } catch (error) {
@@ -120,14 +128,14 @@ export async function DELETE(req) {
 
   const role = profile?.role ?? 'user'
 
-  const client = await clientPromise
-  const db = client.db(process.env.DB_NAME || 'location_data_app')
-  const submissions = db.collection('submissions')
+  // Check if submission exists and get ownership info
+  const { data: submission, error: fetchError } = await supabase
+    .from('submissions')
+    .select('user_id')
+    .eq('id', submissionId)
+    .single()
 
-  // Find the submission first
-  const submission = await submissions.findOne({ _id: submissionId })
-
-  if (!submission) {
+  if (fetchError || !submission) {
     return NextResponse.json(
       { error: 'Submission not found' },
       { status: 404 }
@@ -135,14 +143,25 @@ export async function DELETE(req) {
   }
 
   // Check if user owns the submission or is admin
-  if (submission.userId !== user.id && role !== 'admin') {
+  if (submission.user_id !== user.id && role !== 'admin') {
     return NextResponse.json(
       { error: 'Forbidden' },
       { status: 403 }
     )
   }
 
-  await submissions.deleteOne({ _id: submissionId })
+  const { error: deleteError } = await supabase
+    .from('submissions')
+    .delete()
+    .eq('id', submissionId)
+
+  if (deleteError) {
+    console.error('Error deleting submission:', deleteError)
+    return NextResponse.json(
+      { error: 'Failed to delete submission' },
+      { status: 500 }
+    )
+  }
 
   return NextResponse.json({ message: 'Submission deleted' })
 }
